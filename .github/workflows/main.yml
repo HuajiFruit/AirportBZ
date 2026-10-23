@@ -51,11 +51,21 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts
           products="$PWD/build/products/$CONFIGURATION"
-          version=$(awk '/MODULE_VERSION =/ {gsub(/;/, "", $3); print $3; exit}' itlwm.xcodeproj/project.pbxproj)
-          short_sha=$(git rev-parse --short HEAD)
-          configuration=$(printf '%s' "$CONFIGURATION" | tr '[:lower:]' '[:upper:]')
-          suffix="v$version-$configuration-alpha-$short_sha"
-          ditto -c -k --keepParent "$products/$PLATFORM/AirportItlwm.kext" "artifacts/AirportItlwm-$PLATFORM-$suffix.zip"
+          tag=$(python3 -c "
+          import re
+          with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
+              m = re.search(r'^##\s*\[([vV]?[0-9][^\]]*)\]', f.read(), re.M)
+              print(m.group(1).strip() if m else 'v2.4.0')
+          ")
+          if [[ ! "$tag" =~ ^[vV] ]]; then
+            tag="v$tag"
+          fi
+          if [[ "$CONFIGURATION" == "Release" ]]; then
+            zip_name="AirportItlwm-$PLATFORM-$tag.zip"
+          else
+            zip_name="AirportItlwm-$PLATFORM-$tag-DEBUG.zip"
+          fi
+          ditto -c -k --keepParent "$products/$PLATFORM/AirportItlwm.kext" "artifacts/$zip_name"
       - uses: actions/upload-artifact@v4
         with:
           name: AirportItlwm-${{ matrix.platform }}-${{ matrix.configuration }}
@@ -67,8 +77,8 @@ jobs:
           name: build-logs-${{ matrix.platform }}-${{ matrix.configuration }}
           path: logs
 
-  prerelease:
-    name: Publish development build
+  release:
+    name: Publish Release
     needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
@@ -76,47 +86,46 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 5
       - uses: actions/download-artifact@v4
         with:
           pattern: AirportItlwm-*
           path: artifacts
           merge-multiple: true
-      - name: Publish alpha artifacts
+      - name: Publish Release from CHANGELOG
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          version=$(awk '/MODULE_VERSION =/ {gsub(/;/, "", $3); print $3; exit}' itlwm.xcodeproj/project.pbxproj)
-          tag="v$version-alpha"
-          printf '%s\n\n' 'Development build. Hardware validation is required before daily use.' > ReleaseNotes.md
-          git log -5 --format='- %h %s' >> ReleaseNotes.md
-          if gh release view "$tag" --json isPrerelease > current-release.json 2>/dev/null; then
-            # Never replace a stable release with development artifacts.
-            jq -e '.isPrerelease == true' current-release.json > /dev/null
-            gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" \
-              -f sha="$GITHUB_SHA" -F force=true
-            gh release edit "$tag" --prerelease --notes-file ReleaseNotes.md
+
+          python3 -c "
+          import re
+          with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
+              content = f.read()
+          m = re.search(r'^##\s*\[([vV]?[0-9][^\]]*)\](?:\s*-\s*[^\n]+)?\n(.*?)(?=\n^##\s*\[|\Z)', content, re.M | re.S)
+          if not m:
+              raise SystemExit('Error: No valid version header found in CHANGELOG.md (expected ## [vX.Y.Z])')
+          tag = m.group(1).strip()
+          if not tag.startswith('v') and not tag.startswith('V'):
+              tag = 'v' + tag
+          body = m.group(2).strip()
+          with open('RELEASE_TAG.txt', 'w', encoding='utf-8') as f:
+              f.write(tag)
+          with open('ReleaseNotes.md', 'w', encoding='utf-8') as f:
+              f.write(body + '\n')
+          "
+
+          tag=$(cat RELEASE_TAG.txt)
+          title="AirportBZ $tag"
+
+          echo "Publishing release: $tag with title: $title"
+
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "Release $tag already exists. Updating title and release notes..."
+            gh release edit "$tag" --title "$title" --notes-file ReleaseNotes.md
           else
-            gh release create "$tag" --target "$GITHUB_SHA" --prerelease --title "$tag" --notes-file ReleaseNotes.md
+            echo "Creating new release $tag..."
+            gh release create "$tag" --target "$GITHUB_SHA" --title "$title" --notes-file ReleaseNotes.md
           fi
+
+          echo "Uploading release assets..."
           gh release upload "$tag" artifacts/AirportItlwm-*.zip --clobber
-
-          # Remove obsolete assets only after the replacement set has uploaded.
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" \
-            --jq '.assets[] | [.id, .name] | @tsv' > release-assets.tsv
-          while IFS=$'\t' read -r asset_id asset_name; do
-            if [[ ! -f "artifacts/$asset_name" ]]; then
-              gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id"
-            fi
-          done < release-assets.tsv
-
-          # Keep exactly one prerelease; stable releases are retained.
-          gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
-            --jq '.[] | select(.prerelease and (.draft | not)) | .tag_name' > prereleases.txt
-          while IFS= read -r old_tag; do
-            if [[ "$old_tag" != "$tag" ]]; then
-              gh release delete "$old_tag" --yes --cleanup-tag
-            fi
-          done < prereleases.txt
