@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-TOOLCHAIN=${DARWIN_TOOLCHAIN:?Set DARWIN_TOOLCHAIN to the Darwin toolchain bin directory}
+TOOLCHAIN=${DARWIN_TOOLCHAIN:-/mnt/c/Users/jimde/Documents/Codex/EFI-Touchpad-Polling-2026-10-19/toolchain/bin}
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 

@@ -23,6 +23,8 @@ jobs:
         configuration: [Debug, Release]
     steps:
       - uses: actions/checkout@v4
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
       - name: Install MacKernelSDK
         uses: actions/checkout@v4
         with:

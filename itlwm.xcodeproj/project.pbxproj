@@ -769,7 +769,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "scripts/fw_gen.sh -P \"${PROJECT_DIR}/firmware-bz92/\"\n";
+			shellScript = "/bin/bash \"${PROJECT_DIR}/scripts/fw_gen.sh\" -P \"${PROJECT_DIR}/firmware-bz92/\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
