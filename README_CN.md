@@ -91,9 +91,13 @@ Sequoia 二进制文件和下方的安装步骤仅适用于 Sequoia。
 ## 从源码构建
 
 已验证的命令行环境为 **WSL Ubuntu-26.04，使用 clang 21**。
-需要 Python 3、Bash、固定到提交 `3f750085caa17ec3a7880f11c11bf4f48cd6a164` 的 MacKernelSDK，
+需要 Python 3、Bash、Git、固定到提交 `3f750085caa17ec3a7880f11c11bf4f48cd6a164` 的 MacKernelSDK，
 以及包含 `x86_64-apple-darwin-ld`、`x86_64-apple-darwin-nm` 和
 `x86_64-apple-darwin-otool` 的 Darwin 工具链。仓库不附带这些构建依赖。
+
+构建入口会自动将项目附带的 MSI-X 头文件补丁应用到 MacKernelSDK，
+在对应的预留虚函数槽中补充 Apple 的 `IOPCIDevice::configureInterrupts` 声明。
+请使用可写的 SDK 目录；已经应用过补丁的头文件不会重复修改。
 
 在仓库根目录运行以下命令，并将两个依赖路径替换为实际路径。
 首次克隆以及固件发生变化后，都需要先生成固件封装文件：

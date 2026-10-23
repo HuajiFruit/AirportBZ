@@ -5,6 +5,10 @@
 #
 #  Created by qcwap on 2020/3/10.
 #  Copyright © 2020 Zhong Xianyao. All rights reserved.
+set -eu
+
+/bin/sh "${PROJECT_DIR}/scripts/prepare-mackernelsdk.sh" "${PROJECT_DIR}/MacKernelSDK"
+
 target_file="${PROJECT_DIR}/include/FwBinary.cpp"
 if [ -f "$target_file" ]; then
 exit 0

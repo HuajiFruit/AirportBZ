@@ -31,6 +31,8 @@ jobs:
           repository: acidanthera/MacKernelSDK
           ref: 3f750085caa17ec3a7880f11c11bf4f48cd6a164
           path: MacKernelSDK
+      - name: Prepare MacKernelSDK PCI headers
+        run: /bin/sh scripts/prepare-mackernelsdk.sh "$PWD/MacKernelSDK"
       - name: Build AirportItlwm for ${{ matrix.platform }}
         env:
           CONFIGURATION: ${{ matrix.configuration }}
@@ -38,11 +40,21 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p logs
-          xcodebuild -project itlwm.xcodeproj -scheme "AirportItlwm-$PLATFORM" \
+          if xcodebuild -project itlwm.xcodeproj -scheme "AirportItlwm-$PLATFORM" \
             -configuration "$CONFIGURATION" -jobs 3 ARCHS=x86_64 \
             SYMROOT="$PWD/build/products" OBJROOT="$PWD/build/obj" \
             CODE_SIGNING_ALLOWED=NO GIT_COMMIT="_$(git rev-parse --short HEAD)" \
-            build > "logs/AirportItlwm-$PLATFORM.log" 2>&1 || { tail -100 "logs/AirportItlwm-$PLATFORM.log"; exit 1; }
+            build > "logs/AirportItlwm-$PLATFORM.log" 2>&1; then
+            tail -20 "logs/AirportItlwm-$PLATFORM.log"
+          else
+            status=$?
+            echo "::group::Compiler and linker errors"
+            grep -n -B 3 -A 6 -E '(^|[[:space:]])(fatal )?error:|Undefined symbols|^ld:|BUILD FAILED' \
+              "logs/AirportItlwm-$PLATFORM.log" || true
+            echo "::endgroup::"
+            tail -100 "logs/AirportItlwm-$PLATFORM.log"
+            exit "$status"
+          fi
       - name: Package kernel extension
         env:
           CONFIGURATION: ${{ matrix.configuration }}

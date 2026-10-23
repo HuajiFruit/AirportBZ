@@ -1,0 +1,44 @@
+Expose the MSI-X interface used by the Sequoia and Tahoe targets.
+Base: MacKernelSDK 3f750085caa17ec3a7880f11c11bf4f48cd6a164.
+References (Apple IOPCIFamily):
+https://github.com/apple-oss-distributions/IOPCIFamily/blob/4822b27a36e2de70e231ecf2bf3021384fab6ec2/IOKit/pci/IOPCIDevice.h
+https://github.com/apple-oss-distributions/IOPCIFamily/blob/4822b27a36e2de70e231ecf2bf3021384fab6ec2/IOKit/pci/IOPCIFamilyDefinitions.h
+
+The method consumes reserved virtual slot 3; adding it at the end of the class
+would call the wrong kernel method. Keep the remaining reserved slots unchanged.
+
+diff --git a/Headers/IOKit/pci/IOPCIDevice.h b/Headers/IOKit/pci/IOPCIDevice.h
+--- a/Headers/IOKit/pci/IOPCIDevice.h
++++ b/Headers/IOKit/pci/IOPCIDevice.h
+@@ -216,7 +216,8 @@ enum {
+ enum
+ {
+     // bits getInterruptType result
+-    kIOInterruptTypePCIMessaged = 0x00010000
++    kIOInterruptTypePCIMessaged  = 0x00010000,
++    kIOInterruptTypePCIMessagedX = 0x00020000
+ };
+ 
+ // setLatencyTolerance options
+@@ -710,7 +711,20 @@ public:
+     virtual UInt32 extendedFindPCICapability( UInt32 capabilityID, IOByteCount * offset = 0 );
+ 
+     // Unused Padding
+-    OSMetaClassDeclareReservedUnused(IOPCIDevice,  3);
++    OSMetaClassDeclareReservedUsed(IOPCIDevice,  3);
++/*! @function configureInterrupts
++    @abstract Configure interrupts.
++    @discussion This method allocates interrupts based on the passed parameters and the device's capabilities, i.e. MSI(X).
++    @param interruptType kIOInterruptTypeLevel, kIOInterruptTypePCIMessaged or kIOInterruptTypePCIMessagedX.
++    @param numRequired The minimum number of vectors for allocation to succeed.
++    @param numRequested The desired number of vectors to allocate.
++    @param options Unused
++    @result kIOReturnSuccess if there were no errors */
++    virtual IOReturn configureInterrupts( UInt32 interruptType,
++                                          UInt32 numRequired,
++                                          UInt32 numRequested,
++                                          IOOptionBits options = 0 );
++
+     OSMetaClassDeclareReservedUnused(IOPCIDevice,  4);
+     OSMetaClassDeclareReservedUnused(IOPCIDevice,  5);
+     OSMetaClassDeclareReservedUnused(IOPCIDevice,  6);

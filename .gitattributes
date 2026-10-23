@@ -2,6 +2,8 @@
 # ("set: pipefail: invalid option name"). Keep them LF in every checkout.
 *.sh                text eol=lf
 *.py                text eol=lf
+# Empty context lines in unified diffs contain one required space.
+*.patch             text eol=lf whitespace=-blank-at-eol
 # Rewritten by scripts/build-sequoia-bz92.sh on every build.
 sources-sequoia.json text eol=lf
 

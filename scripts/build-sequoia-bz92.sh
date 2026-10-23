@@ -4,6 +4,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SDK=${MAC_KERNEL_SDK:?Set MAC_KERNEL_SDK to the MacKernelSDK directory}
 TOOLCHAIN=${DARWIN_TOOLCHAIN:?Set DARWIN_TOOLCHAIN to the Darwin toolchain bin directory}
 OUT=${BUILD_OUTPUT:-$ROOT/build}
+/bin/sh "$ROOT/scripts/prepare-mackernelsdk.sh" "$SDK"
 mkdir -p "$OUT/objects"
 cd "$ROOT"
 

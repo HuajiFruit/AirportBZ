@@ -97,10 +97,15 @@ the driver's 802.11ax path; it does not add WPA3, 6 GHz or MLO support.
 ## Building from source
 
 The verified command-line environment is **WSL Ubuntu-26.04 with clang 21**. You need
-Python 3, Bash, MacKernelSDK at commit
+Python 3, Bash, Git, MacKernelSDK at commit
 `3f750085caa17ec3a7880f11c11bf4f48cd6a164`, and a Darwin toolchain containing
 `x86_64-apple-darwin-ld`, `x86_64-apple-darwin-nm` and
 `x86_64-apple-darwin-otool`. These dependencies are not bundled in this repository.
+
+The build entry points automatically apply the included MSI-X header backport
+to MacKernelSDK. It exposes Apple's `IOPCIDevice::configureInterrupts` interface
+at its reserved virtual slot. Use a writable SDK checkout; an already prepared
+header is left unchanged.
 
 Run from the repository root, replacing the two dependency paths:
 
