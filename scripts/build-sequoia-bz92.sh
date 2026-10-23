@@ -38,7 +38,7 @@ common=(-target x86_64-apple-macos15.2 -mkernel -fapple-kext
   -nostdinc -D__PRIVATE_SPI__ -DKERNEL -DKERNEL_PRIVATE -DDRIVER_PRIVATE
   -DIEEE80211_STA_ONLY -DAIRPORT -DAIRPORT_WCL -DAIRPORT_VTD
   -DIO80211FAMILY_V2 -D__IO80211_TARGET=150200
-  '-DITLWM_VERSION="2.4.0"' '-DGIT_COMMIT="be201-sequoia-dev"'
+  '-DITLWM_VERSION="1.0.0"' '-DGIT_COMMIT="be201-sequoia-dev"'
   -isystem "$SDK/Headers" -isystem "$(clang -print-resource-dir)/include"
   -I . -I itlwm -I itlwm/hal_iwx
   -I itl80211 -I itl80211/openbsd -I itl80211/linux -I include
@@ -75,7 +75,7 @@ cat > "$OUT/module.cpp" <<'EOF'
 extern "C" {
 extern kern_return_t _start(kmod_info_t *, void *);
 extern kern_return_t _stop(kmod_info_t *, void *);
-KMOD_EXPLICIT_DECL(com.zxystd.AirportItlwm, "2.4.0", _start, _stop)
+KMOD_EXPLICIT_DECL(com.zxystd.AirportItlwm, "1.0.0", _start, _stop)
 __private_extern__ kmod_start_func_t *_realmain = 0;
 __private_extern__ kmod_stop_func_t *_antimain = 0;
 __private_extern__ int _kext_apple_cc = 1;

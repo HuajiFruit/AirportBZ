@@ -1,51 +1,50 @@
 # Changelog
 
-All notable changes to the AirportBZ project will be documented in this file.
+## [v1.0.0] - 2026-10-23
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+### Initial release
 
----
+First public release of AirportBZ, an experimental native macOS Wi-Fi driver
+distributed as `AirportItlwm.kext`. Networks can be scanned and joined through
+the macOS Wi-Fi menu without HeliPort.
 
-## 📌 Release Specification & How to Version / 版本发布规范说明
+#### Platforms
 
-> **CI 发布机制说明**：
-> 1. **版本号决定权**：GitHub Actions CI 在发布时，会自动读取本文档中**最上方第一个 `## [vX.Y.Z]`** 标题作为当前发布的 Release Tag（例如 `v2.4.0`）。
-> 2. **更新说明提取**：CI 会自动截取该版本号与下一个版本号之间的 Markdown 文本，作为 GitHub Release 页面的更新说明（Release Notes）。
-> 3. **如何发布下一个版本**：
->    - 当您准备发布新版时，只需在本文档顶部添加一个新的版本块，例如：
->      ```markdown
->      ## [v2.4.1] - 2026-11-01
->
->      ### Fixed
->      - 修复了某某问题...
->      ```
->    - 推送（`git push`）到 `main` 分支后，CI 便会**自动以 `v2.4.1` 为名编译 Release 并创建 Release 发布**！
-> 4. **分类标签规范**：
->    - `Added`：新功能、新支持的硬件或系统。
->    - `Changed`：已有功能的调整、重构或性能优化。
->    - `Fixed`：缺陷、断言（Assert）或兼容性崩溃修复。
->    - `Removed`：被删除、废弃的代码或旧特性。
+| macOS / architecture | Adapter | Status |
+| --- | --- | --- |
+| Sequoia 15.2+ (`Darwin 24.2.0–24.99.99`), x86_64 | Intel BE201 (`8086:7740`) | Primary supported platform; verified on hardware. |
+| Sequoia 15.2+ (`Darwin 24.2.0–24.99.99`), x86_64 | Intel BE200 (`8086:272B`) | Device support and firmware included; compile-checked only. Requires GL-C0 / FM-C0 stepping. |
+| Tahoe 26, x86_64 | Intel BE201 / BE200 | Separate build target; compile-checked only, with no hardware validation. |
 
----
+BE201 on Sequoia is the only hardware-validated combination. BE200 and Tahoe
+runtime compatibility remains unverified. Use the build matching your macOS
+version. Earlier macOS versions and other Intel Wi-Fi adapters are unsupported
+by this release.
 
-## [v2.4.0] - 2026-10-23
+#### Verified functionality on BE201 / Sequoia
 
-### Added
-- **Intel Wi-Fi 7 BE201 原生支持**：为 Intel Wi-Fi 7 BE201（`8086:7740`，CNVio3 接口，包含 Killer BE1750i）在 macOS Sequoia 15.2+ 上提供原生 AirPort / Skywalk 驱动支持。
-- **Intel Wi-Fi 7 BE200 架构就绪**：完成 Intel Wi-Fi 7 BE200（`8086:272B`，PCIe 独立网卡）驱动与 `gl-c0-fm-c0-92` 专有固件适配，支持 GL MAC（`0x47`）及 C0 步进硬件。
-- **专有 DMA 内存架构**：为 BZ/GL 家族网卡配置 64 MiB 专用 DMA 内存池，并严格限制单次分配不跨越 4 GiB 硬件物理边界。
-- **高性能 MSI-X 中断**：在初始化早期请求配置 MSI-X 消息中断，解决传统中断无法锁存 RX 接收完成的问题。
-- **原生系统特性联动**：菜单栏原生 Wi-Fi 控制中心直接可用、网络即时扫描、iPhone 个人热点快速连入、CoreLocation Wi-Fi 辅助定位完全正常。
+- Native macOS Wi-Fi interface and network scanning.
+- Open-network and WPA2-Personal (PSK/CCMP) connections with DHCP.
+- User-initiated switching between networks.
 
-### Changed
-- **驱动彻底纯净化瘦身**：全面清理并物理移除了 37,876 行 Wi-Fi 4/5 历史老网卡代码（`hal_iwm` 与 `hal_iwn`），删除数百兆过时固件。
-- **编译单元高度精简**：参与 Sequoia 构建的源文件由原先的 74 个大幅精简为 57 个，提升编译速度。
-- **二进制体积优化**：最终内核扩展二进制体积缩减至 2.25 MB（瘦身约 250 KB 死代码）。
-- **信号宏原生收敛**：移除对老旧 `IWM_MIN_DBM` 宏的间接依赖，原生收敛至 `IWX_MIN_DBM`（-100 dBm）。
-- **BE200 离散参数对齐**：参考 Linux 7.0 离散网卡规范移除多余的 2500 微秒 LTR 延迟。
+### 首次发布
 
-### Fixed
-- **解决 WPA2 握手超时 `-3905`**：在 net80211 协议栈中引入 EAPOL 帧暂存机制，解决 AP 提前发送 Message 1 与驱动底层 MLD 初始化耗时的竞态，实现 50~160ms 极速连网。
-- **消除固件断言崩溃**：严格规范断开网络时的硬件解构时序（BAID 块确认 $\to$ 密钥 Key $\to$ 发送队列 TX Queue $\to$ 站点 STA），彻底消除 UMAC `0x20000072` / `0x20101e08` 崩溃断言。
-- **修复 CI 脚本执行权限**：修复 GitHub Actions 环境下 `scripts/fw_gen.sh` 缺少可执行权限导致的 `Permission denied` 编译失败问题。
+AirportBZ 的首个公开版本，以 `AirportItlwm.kext` 形式提供实验性的 macOS 原生 Wi-Fi
+驱动。可直接通过系统 Wi-Fi 菜单扫描和连接网络，无需 HeliPort。
+
+#### 平台支持
+
+| macOS / 架构 | 网卡 | 当前状态 |
+| --- | --- | --- |
+| Sequoia 15.2+（`Darwin 24.2.0–24.99.99`），x86_64 | Intel BE201（`8086:7740`） | 主要支持平台，已通过真机验证。 |
+| Sequoia 15.2+（`Darwin 24.2.0–24.99.99`），x86_64 | Intel BE200（`8086:272B`） | 已包含设备适配和固件，仅通过编译检查。要求 GL-C0 / FM-C0 步进。 |
+| Tahoe 26，x86_64 | Intel BE201 / BE200 | 提供独立构建目标，仅通过编译检查，尚未进行真机验证。 |
+
+目前只有 BE201 搭配 Sequoia 经过真机验证，BE200 和 Tahoe 的实际运行兼容性尚未验证。
+请使用与 macOS 版本对应的驱动包。本版本不支持更早的 macOS 或其他 Intel 无线网卡。
+
+#### BE201 / Sequoia 已验证功能
+
+- 系统原生 Wi-Fi 界面与网络扫描。
+- 开放网络及 WPA2-Personal（PSK/CCMP）连接与 DHCP。
+- 用户主动切换网络。

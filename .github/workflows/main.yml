@@ -55,7 +55,7 @@ jobs:
           import re
           with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
               m = re.search(r'^##\s*\[([vV]?[0-9][^\]]*)\]', f.read(), re.M)
-              print(m.group(1).strip() if m else 'v2.4.0')
+              print(m.group(1).strip() if m else 'v1.0.0')
           ")
           if [[ ! "$tag" =~ ^[vV] ]]; then
             tag="v$tag"
