@@ -1,0 +1,10 @@
+# Scripts run under WSL and macOS; a CRLF checkout on Windows breaks bash
+# ("set: pipefail: invalid option name"). Keep them LF in every checkout.
+*.sh                text eol=lf
+*.py                text eol=lf
+# Rewritten by scripts/build-sequoia-bz92.sh on every build.
+sources-sequoia.json text eol=lf
+
+# Firmware images and PNVM data.
+*.ucode             binary
+*.pnvm              binary

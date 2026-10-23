@@ -1,0 +1,24 @@
+.DS_Store
+DerivedData
+build
+xcuserdata
+project.xcworkspace
+FwBinary.cpp
+*.pyc
+MacKernelSDK
+
+# Local work folders (build output, deploy kits, USB backups, reference copies)
+deploy-backups
+deploy-staging
+reference
+tools
+
+# Private development notes and the machine-specific deployment helper
+/AGENTS.md
+/BE201-SEQUOIA.md
+/PROJECT-OVERVIEW.md
+/scripts/package-sequoia-bz92.py
+
+# Collected diagnostics and public source exports
+/diagnostics/
+/dist/
