@@ -14762,6 +14762,19 @@ const struct iwl_cfg iwl_cfg_bz_b0_fm_c0 = {
     .num_rbds = IWL_NUM_RBDS_BZ_EHT,
 };
 
+/*
+ * BZ B0 MAC with the GF (AX211-class) companion RF. Intel ships this
+ * combination as iwlwifi-bz-b0-gf-a0; some Arrow Lake platforms are built
+ * that way and report CSR_HW_RFID_TYPE == GF (0x10d).
+ */
+const struct iwl_cfg iwl_cfg_bz_b0_gf_a0 = {
+    .name = "Intel(R) Wi-Fi 7 BE201 320MHz (GF RF)",
+    .fwname = "iwlwifi-bz-b0-gf-a0-92.ucode",
+    .device_family = IWX_DEVICE_FAMILY_BZ,
+    .uhb_supported = 1,
+    .num_rbds = IWL_NUM_RBDS_BZ_EHT,
+};
+
 const struct iwl_cfg iwl_cfg_gl_c0_fm_c0 = {
     .name = "Intel(R) Wi-Fi 7 BE200 320MHz",
     .fwname = "iwlwifi-gl-c0-fm-c0-92.ucode",
@@ -15178,6 +15191,12 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
                   IWL_CFG_RF_TYPE_FM, IWL_CFG_ANY, IWL_CFG_ANY,
                   IWL_CFG_ANY, IWL_CFG_NO_CDB,
                   iwl_cfg_bz_b0_fm_c0, "Intel(R) Wi-Fi 7 BE201 320MHz"),
+    /* Same MAC with the GF companion RF (hardware reports rfid type 0x10d). */
+    _IWL_DEV_INFO(0x7740, IWL_CFG_ANY,
+                  IWL_CFG_MAC_TYPE_BZ, IWL_CFG_ANY,
+                  IWL_CFG_RF_TYPE_GF, IWL_CFG_ANY, IWL_CFG_ANY,
+                  IWL_CFG_ANY, IWL_CFG_NO_CDB,
+                  iwl_cfg_bz_b0_gf_a0, "Intel(R) Wi-Fi 7 BE201 320MHz (GF RF)"),
     /* Only gl-c0-fm-c0 is packaged; Linux also has gl-b0-fm-b0 (cfg/rf-fm.c). */
     _IWL_DEV_INFO(0x272B, IWL_CFG_ANY,
                   IWL_CFG_MAC_TYPE_GL, IWX_SILICON_C_STEP,
